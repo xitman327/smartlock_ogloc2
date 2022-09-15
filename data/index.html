@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html onload="synbctime()">
+<link href="https://unpkg.com/tabulator-tables@5.2.3/dist/css/tabulator.min.css" rel="stylesheet">
+ <script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.2.3/dist/js/tabulator.min.js"></script>
+<head>
+<style>
+	body {background-color: powderblue;}
+	h1   {color: blue;}
+    .mainbutton {
+        width: 49%; 
+    	height: 45px; 
+    	align:center;
+    	font-size: 16px;
+    	font-weight:bold
+    }
+    
+    .form{
+    	width:100%;
+        text-align:center;
+    }
+    
+    
+    .input {
+		width:50%;
+  	}
+    
+    .container2{
+    	align:center;
+        border: 5px solid red;
+    }
+    .frame{
+    	text-align:center;
+        width:60%;
+        height:200px;
+        margin:auto;
+    	display:block;
+    }
+  
+</style>
+</head>
+<body>
+
+  <h1 align=center>SMART LOCK INTERFACE</h1>
+  
+
+<div class="container1">
+	<button class="mainbutton" type="button" onclick="fetch('/?FUNCTION=LOCK')">LOCK</button>
+	<button class="mainbutton" type="button" onclick="fetch('/?FUNCTION=UNLOCK')">UNLOCK</button>
+</div>
+
+<br><br>
+
+<div class="container2">
+
+<h2 align=center>Active Cards</h2>
+<br>
+
+<div id="userDivTable"></div>
+
+<br><br>
+<br>
+
+<div class="form">
+<label for="ID">Card ID:</label>
+  <input class="input" type="text" id="IDsa" required pattern="[A-Za-z0-9]{1,20}">
+  <button type="button" onclick="send_add()">Add</button>
+  </div>
+
+</div>
+<script type="text/javascript" charset="utf-8">
+			
+	function send_add(){
+		let url = '/?ID=';
+		url += document.getElementById("IDsa").value;
+		fetch(url);
+	}
+	function synbctime(){
+		const now = new Date();
+		const secondsSinceEpoch = Math.round(now.getTime() / 1000);
+		let url = '/?TIME=';
+		url += secondsSinceEpoch;
+		fetch(url);
+	}
+
+    </script>
+</body>
+
+ 
+</html>
