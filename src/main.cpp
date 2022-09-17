@@ -8,6 +8,34 @@
 #include <ESPmDNS.h>
 #include <ArduinoOTA.h>
 #include <ArduinoJson.h>
+#include <CSV_Parser.h>
+
+char * csv_str = "cardid,cardname,date,cardact\n";
+CSV_Parser cp(csv_str, "xsss");
+
+int32_t *cardid = (int32_t*)cp["cardid"];
+char **cardname = (char**)cp["cardname"];
+char **carddate = (char**)cp["date"];
+char **cardact= (char**)cp["cardact"];
+
+void read_csv(){
+    File file_csv = SPIFFS.open("/log.csv", FILE_READ);
+    if (file_csv) {
+        file_csv.readBytes(csv_str, file_csv.size());
+    }
+    file_csv.close();
+    ~file_csv;
+}
+
+void write_csv(){
+    SPIFFS.remove("/log.csv");
+    File file_csv = SPIFFS.open("/log.csv", FILE_WRITE, true);
+    if (file_csv) {
+        file_csv.print(csv_str);
+    }
+    file_csv.close();
+    ~file_csv;
+}
 
 
 #define tone_pin 12
