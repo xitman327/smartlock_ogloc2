@@ -1,5 +1,3 @@
-#include <Arduino.h>
-#include <RTClib.h>
 
 bool rtcok;
 RTC_DS1307 rtc;

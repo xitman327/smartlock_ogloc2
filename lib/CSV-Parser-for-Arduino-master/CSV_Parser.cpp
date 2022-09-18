@@ -5,6 +5,9 @@
 #ifndef CSV_PARSER_DONT_IMPORT_SD
     #include <SD.h>
 #endif
+#ifndef CSV_PARSER_DONT_IMPORT_SPIFFS
+    #include <SPIFFS.h>
+#endif
 
 //#include "mem_check.h" // COMMENT-OUT BEFORE UPLOAD
 
@@ -115,6 +118,27 @@ bool CSV_Parser::readSDfile(const char *f_name) {
   // so you have to close this one before opening another.
 
   File csv_file = SD.open(f_name);
+  if (!csv_file) 
+    return false;
+    
+  // read file and supply it to csv parser
+  while (csv_file.available())
+    *this << (char)csv_file.read();
+  
+  csv_file.close();
+  
+  // ensure that the last value of the file is parsed (even if the file doesn't end with '\n')
+  parseLeftover();
+  return true;
+}
+#endif
+
+#ifndef CSV_PARSER_DONT_IMPORT_SPIFFS
+bool CSV_Parser::readSPIFFSfile(const char *f_name) {
+  // open the file. note that only one file can be open at a time,
+  // so you have to close this one before opening another.
+
+  File csv_file = SPIFFS.open(f_name);
   if (!csv_file) 
     return false;
     

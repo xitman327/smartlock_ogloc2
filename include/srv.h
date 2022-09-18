@@ -1,6 +1,4 @@
-#include "ESPAsyncWebServer.h"
-//#include "stepper.h"
-#include <RTClib.h>
+
 AsyncWebServer server(80);
 
 extern char card_name[50];
@@ -25,9 +23,11 @@ void srv_init(){
               else if (p->name() == String("FUNCTION")) {
                   if (p->value() == String("LOCK")) {
                       rotator = lock;
+                      beep_valid = 1;
                   }
                   else if (p->value() == String("UNLOCK")) {
                       rotator = unlock;
+                      beep_valid = 1;
                   }
               }
               else if (p->name() == String("TIME")) {
@@ -53,11 +53,45 @@ void srv_init(){
                   Serial.print(time.second(), DEC);
                   Serial.println();
               }
+              else if (p->name() == String("clear_log")) {
+                if(SPIFFS.exists("/logs.csv")){
+                    SPIFFS.remove("/logs.csv");
+                    File file_csv = SPIFFS.open("/logs.csv", FILE_WRITE, true);
+                    if (file_csv) {
+                        file_csv.print("Card ID,Card Name,Date,Action\n");
+                    }else{
+                        Serial.println("file failled");
+                    }
+                    file_csv.close();
+                    ~file_csv;
+                    beep_valid = 1;
+                }
+              }
+              else if (p->name() == String("remove_cards")) {
+                if(SPIFFS.exists("/keys.txt")){
+                    SPIFFS.remove("/keys.txt");
+                    jobact.clear();
+                    File file = SPIFFS.open("/keys.txt", FILE_WRITE, true);
+                    serializeJson(jobact, file);
+                    file.close();
+                    ~file;
+                    beep_valid = 1;
+                }
+
+              }
           }
           
         }
         request->send(SPIFFS, "/index.html", String(), false);
       });
+
+      server.on("/logs.csv", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(SPIFFS, "/logs.csv", String(), false);
+      });
+      server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(SPIFFS, "/favicon.ico", "image/x-icon");
+      });
+
 
        server.begin();
 }

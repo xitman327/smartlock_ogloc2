@@ -2,40 +2,49 @@
 
 
 #include <Tone32.h>
-
+#include <WiFiManager.h>
+#include "WiFi.h"
+#include <SPI.h>
+#include "EasyMFRC522.h"
 #include "FS.h"
 #include "SPIFFS.h"
 #include <ESPmDNS.h>
 #include <ArduinoOTA.h>
 #include <ArduinoJson.h>
+#include <RTClib.h>
+#include "ESPAsyncWebServer.h"
+
+#define CSV_PARSER_DONT_IMPORT_SD
+
 #include <CSV_Parser.h>
 
-char * csv_str = "cardid,cardname,date,cardact\n";
-CSV_Parser cp(csv_str, "xsss");
+// CSV_Parser cp("ssss", true, ',');
 
-int32_t *cardid = (int32_t*)cp["cardid"];
-char **cardname = (char**)cp["cardname"];
-char **carddate = (char**)cp["date"];
-char **cardact= (char**)cp["cardact"];
+// char **cardid = (char**)cp["cardid"];
+// char **cardname = (char**)cp["cardname"];
+// char **carddate = (char**)cp["date"];
+// char **cardact= (char**)cp["cardact"];
 
-void read_csv(){
-    File file_csv = SPIFFS.open("/log.csv", FILE_READ);
-    if (file_csv) {
-        file_csv.readBytes(csv_str, file_csv.size());
-    }
-    file_csv.close();
-    ~file_csv;
-}
+// void read_csv(){
+//     File file_csv = SPIFFS.open("/log.csv", FILE_READ);
+//     if (file_csv) {
+//         file_csv.readBytes(csv_str, file_csv.size());
+//     }
+//     file_csv.close();
+//     ~file_csv;
+// }
 
-void write_csv(){
-    SPIFFS.remove("/log.csv");
-    File file_csv = SPIFFS.open("/log.csv", FILE_WRITE, true);
-    if (file_csv) {
-        file_csv.print(csv_str);
-    }
-    file_csv.close();
-    ~file_csv;
-}
+// void write_csv(){
+//     if(SPIFFS.exists("/log.csv")){
+//         SPIFFS.remove("/log.csv");
+//     }
+//     File file_csv = SPIFFS.open("/log.csv", FILE_WRITE, true);
+//     if (file_csv) {
+//         file_csv.print(cp);
+//     }
+//     file_csv.close();
+//     ~file_csv;
+// }
 
 
 #define tone_pin 12
@@ -58,6 +67,9 @@ void tone_reject(){
     tone(tone_pin, NOTE_E3, 500, tn_channel);
     noTone(tone_pin, tn_channel);
 }
+
+const char strs[8][25] PROGMEM = {"", "UNLOCKED FROM OUTSIDE", "UNLOCKED FROM INSIDE", "", "", "LOCKED FROM OUTSIDE", "LOCKED FROM INSIDE", ""} ;
+
 
 #include "wifimgr.h"
 #include "rtctime.h"
@@ -85,6 +97,9 @@ void setup()
     //load card keys and names
     SPIFFS.begin();
 
+    // cp.readSPIFFSfile("/logs.csv");
+    // cp.print();
+
     File file = SPIFFS.open("/keys.txt", FILE_READ);
     if (file && file.available()) {
         Serial.println("file exists");
@@ -100,8 +115,7 @@ void setup()
     ledcSetup(0, 1000, 12);// tone setup    
 
 
-    ArduinoOTA.setHostname("smartlock");
-    ArduinoOTA.begin();
+    //read_csv();
 
     wifi_init();
     init_rtc();
@@ -109,12 +123,13 @@ void setup()
     srv_init();
     stepper_init();
 
-    
+    ArduinoOTA.setHostname("smartlock");
+    ArduinoOTA.begin();
 }
 
 
 #define debug_tm 100
-#define comb_tm 500
+#define comb_tm 300
 uint32_t tm0, tm1, tm2;
 uint32_t tm_comb;
 bool bul1;

@@ -1,5 +1,4 @@
-#include <WiFiManager.h>
-#include "WiFi.h"
+
 WiFiManager wm;
 
 void wifi_init(){

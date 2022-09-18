@@ -1,6 +1,3 @@
-#include <Arduino.h>
-#include <SPI.h>
-#include "EasyMFRC522.h"
 
 #define ss1 14
 #define ss2 13
@@ -76,24 +73,46 @@ void logic() {
 void check_combination() {
     if (checka || checkb) {
         
-
+        char datetime[50];
+        DateTime now;
+        if (rtcok) {
+            now = DateTime(rtc.now());
+        }
+        else {
+            now = DateTime(millis() / 1000);
+        }
+        sprintf(datetime, "%02d:%02d:%02d %d/%d/%d", now.hour(), now.minute(), now.second(), now.day(), now.month(), now.year());
+        
+        
         Serial.println(current_tag);
         if (store_card) {
             store_card = 0;
-            char datetime[50];
-            DateTime now;
-            if (rtcok) {
-                now = DateTime(rtc.now());
-            }
-            else {
-                now = DateTime(millis() / 1000);
-            }
-            sprintf(datetime, "%d:%d:%d %d/%d/%d", now.hour(), now.minute(), now.second(), now.day(), now.month(), now.year());
-            JsonObject newcard = jobact.createNestedObject(String(current_tag));
-            newcard["name"] = String(card_name);
-            newcard["registered_date"] = String(datetime) ;
 
             result = jobact.containsKey(current_tag);
+            if(result){
+                beep_invalid = 1;
+                result = 0;
+                return;
+            }
+
+            JsonObject newcard = jobact.createNestedObject(String(current_tag));
+            newcard["name"] = String(card_name);
+            newcard["registered_date"] = String(datetime);
+
+            result = jobact.containsKey(current_tag);
+
+            if (result) {
+            char tmpss[200];
+            sprintf(tmpss, "%s,%s,%s,%s\n", current_tag, card_name, datetime, "Card Added");
+            File file_csv = SPIFFS.open("/logs.csv", FILE_APPEND);
+            if (file_csv) {
+                file_csv.print(tmpss);
+            }else{
+                Serial.println("file failled");
+            }
+            file_csv.close();
+            ~file_csv;
+            }
 
             if (result) {
                 File file = SPIFFS.open("/keys.txt", FILE_WRITE, true);
@@ -114,29 +133,37 @@ void check_combination() {
         }
 
         result = jobact.containsKey(current_tag);
+
         if (result) {
-            char datetime[50];
-            DateTime now;
-            if (rtcok) {
-                now = DateTime(rtc.now());
-            }
-            else {
-                now = DateTime(millis() / 1000);
-            }
-            sprintf(datetime, "%d:%d:%d %d/%d/%d", now.hour(), now.minute(), now.second(), now.day(), now.month(), now.year());
             JsonObject card = jobact[String(current_tag)];
-            String tmp;
-            tmp += isopen ? "LOCKED FROM " : "UNLOCKED FROM ";
-            tmp += checka ? "OUTSIDE" : checkb ? "INSIDE" : "";
-            card[String(datetime)] = tmp;
+            // card[String(datetime)] = tmp;
             String nsame = card["name"];
             Serial.println(nsame + " grandet");
-            File file = SPIFFS.open("/keys.txt", FILE_WRITE, true);
-            serializeJson(jobact, file);
-            file.close();
-            ~file;
+            // File file = SPIFFS.open("/keys.txt", FILE_WRITE, true);
+            // serializeJson(jobact, file);
+            // file.close();
+            // ~file;
             beep_valid = 1;
             result = 0; 
+
+            // int sss = cp.getRowsCount() + 1;
+            // cardid[sss] = current_tag;
+            // cardname[sss] = card_name;
+            // carddate[sss] = datetime;
+            // String tmp;
+            // tmp += rotator == unlocked ? "LOCKED FROM " : "UNLOCKED FROM ";
+            // tmp += checka ? "OUTSIDE" : checkb ? "INSIDE" : "";
+            char tmpss[200];
+            sprintf(tmpss, "%s,%s,%s,%s \n", current_tag, nsame, datetime, strs[(checka | checkb << 1 | (rotator == unlocked) << 2)]);
+            File file_csv = SPIFFS.open("/logs.csv", FILE_APPEND);
+            if (file_csv) {
+                file_csv.print(tmpss);
+            }else{
+                Serial.println("file failled");
+            }
+            file_csv.close();
+            ~file_csv;
+
             if(rotator == locked){
                 rotator = unlock;
             }else if (rotator == unlocked){
@@ -147,6 +174,16 @@ void check_combination() {
         else {
             beep_invalid = 1;
             Serial.println("rejected");
+            char tmpss[200];
+            sprintf(tmpss, "%s,%s,%s,%s\n", current_tag, "unknown", datetime, "Unknown Card");
+            File file_csv = SPIFFS.open("/logs.csv", FILE_APPEND);
+            if (file_csv) {
+                file_csv.print(tmpss);
+            }else{
+                Serial.println("file failled");
+            }
+            file_csv.close();
+            ~file_csv;
         }
 
         checka ? Serial.println("a fired") : checka = 0;

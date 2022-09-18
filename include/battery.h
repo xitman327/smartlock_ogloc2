@@ -1,4 +1,3 @@
-#include <Arduino.h>
 
 #define bk_bat 27
 #define bat_1 39

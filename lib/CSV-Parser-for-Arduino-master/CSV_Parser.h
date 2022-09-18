@@ -120,6 +120,9 @@ public:
 #ifndef CSV_PARSER_DONT_IMPORT_SD
   bool readSDfile(const char *f_name);
 #endif
+#ifndef CSV_PARSER_DONT_IMPORT_SPIFFS
+  bool readSPIFFSfile(const char *f_name);
+#endif
   
   int getColumnsCount();
   
