@@ -14,38 +14,6 @@
 #include <RTClib.h>
 #include "ESPAsyncWebServer.h"
 
-#define CSV_PARSER_DONT_IMPORT_SD
-
-#include <CSV_Parser.h>
-
-// CSV_Parser cp("ssss", true, ',');
-
-// char **cardid = (char**)cp["cardid"];
-// char **cardname = (char**)cp["cardname"];
-// char **carddate = (char**)cp["date"];
-// char **cardact= (char**)cp["cardact"];
-
-// void read_csv(){
-//     File file_csv = SPIFFS.open("/log.csv", FILE_READ);
-//     if (file_csv) {
-//         file_csv.readBytes(csv_str, file_csv.size());
-//     }
-//     file_csv.close();
-//     ~file_csv;
-// }
-
-// void write_csv(){
-//     if(SPIFFS.exists("/log.csv")){
-//         SPIFFS.remove("/log.csv");
-//     }
-//     File file_csv = SPIFFS.open("/log.csv", FILE_WRITE, true);
-//     if (file_csv) {
-//         file_csv.print(cp);
-//     }
-//     file_csv.close();
-//     ~file_csv;
-// }
-
 
 #define tone_pin 12
 #define tn_channel 0
@@ -96,10 +64,6 @@ void setup()
 
     //load card keys and names
     SPIFFS.begin();
-
-    // cp.readSPIFFSfile("/logs.csv");
-    // cp.print();
-
     File file = SPIFFS.open("/keys.txt", FILE_READ);
     if (file && file.available()) {
         Serial.println("file exists");
